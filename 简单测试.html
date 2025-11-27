@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码的黎明 - 探索黑洞</title>
+    <style>
+        /* =========================================
+           1. 全局设置 & 动态背景容器
+           ========================================= */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #000000; /* 纯黑背景 */
+            color: #ffffff;            /* 全局文字白色 */
+            overflow-x: hidden;        /* 防止横向滚动条 */
+            min-height: 100vh;
+        }
+
+        /* 这是放黑洞特效的画布，它固定在最底层 */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* 放在最下面 */
+        }
+
+        /* =========================================
+           2. 书本容器 (玻璃拟态效果)
+           ========================================= */
+        .book-container {
+            max-width: 800px;
+            margin: 50px auto; /* 居中 */
+            
+            /* 玻璃拟态：半透明黑色背景 + 模糊滤镜 */
+            background-color: rgba(20, 20, 20, 0.6); 
+            backdrop-filter: blur(10px); /* 磨砂玻璃效果 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 微弱的白边框 */
+            
+            padding: 40px 60px;
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8); /* 深邃的阴影 */
+            position: relative; /* 确保内容在画布之上 */
+        }
+
+        /* =========================================
+           3. 字体排版
+           ========================================= */
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #fff;
+            /* 酷炫的文字描边+发光效果 */
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            color: #aaa; /* 稍微暗一点的白色 */
+            font-size: 24px;
+        }
+
+        p {
+            line-height: 1.8;
+            color: #ccc; /* 正文用浅灰色，护眼 */
+            font-size: 16px;
+        }
+
+        /* 分割线样式 */
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0));
+            margin: 40px 0;
+        }
+
+        /* =========================================
+           4. 目录交互 (H3) - 优化版
+           ========================================= */
+        h3 {
+            color: #888;            /* 常态：灰色 */
+            padding: 15px 10px;
+            margin: 5px 0;
+            border-left: 0px solid transparent;
+            transition: all 0.3s ease; /* 丝滑过渡 */
+            cursor: pointer;
+            background: transparent;
+            border-radius: 0 10px 10px 0;
+        }
+
+        h3:hover {
+            color: #fff;            /* 悬浮：亮白 */
+            padding-left: 25px;     /* 向右滑动 */
+            background: linear-gradient(90deg, rgba(255, 115, 0, 0.1), transparent); /* 背景微光 */
+            border-left: 5px solid #ff7300; /* 亮橙色荧光条 */
+            text-shadow: 0 0 10px #ff7300;  /* 文字发光 */
+        }
+
+        /* =========================================
+           5. 按钮组 (Buttons) - 优化版
+           ========================================= */
+        .btn-group {
+            display: flex;
+            justify-content: center; /* 按钮居中排列 */
+            gap: 20px; /* 按钮之间的间距 */
+            margin-top: 50px;
+        }
+
+        /* 按钮通用样式 (大家都有的校服) */
+        .btn {
+            width: 100px;
+            height: 40px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s; /* 动画 */
+            color: #000; /* 默认文字黑色 */
+        }
+
+        /* --- 订阅按钮 (白色发光) --- */
+        .btn-sub {
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        .btn-sub:hover {
+            background-color: #ff7300; /* 悬浮变橙色 */
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 115, 0, 0.6);
+            transform: translateY(-3px); /* 上浮 */
+        }
+        .btn-sub:active { transform: scale(0.95); } /* 点击缩小 */
+
+        /* --- 点赞按钮 (粉色) --- */
+        .btn-like {
+            background-color: #ff2e63;
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 46, 99, 0.3);
+        }
+        .btn-like:hover {
+            background-color: #ff0040;
+            box-shadow: 0 0 20px rgba(255, 0, 64, 0.6);
+            transform: translateY(-3px);
+        }
+        .btn-like:active { transform: scale(0.95); }
+
+        /* --- 分享按钮 (蓝色) --- */
+        .btn-share {
+            background-color: #08d9d6;
+            color: #000;
+            box-shadow: 0 0 10px rgba(8, 217, 214, 0.3);
+        }
+        .btn-share:hover {
+            background-color: #00fffb;
+            box-shadow: 0 0 20px rgba(0, 255, 251, 0.6);
+            transform: translateY(-3px);
+        }
+        .btn-share:active { transform: scale(0.95); }
+        .preface, .toc {
+    /* 1. 增加呼吸感 */
+    padding: 0 20px;  /* 让文字不要贴着左右边缘，往里缩 20px */
+    
+    /* 2. 增加间距 */
+    margin-bottom: 30px; /* 每个大区块下面留出 30px 的空隙 */
+}
+
+/* 如果你想让【目录】区域更特别一点，可以单独加个框 */
+.toc {
+    /* 比如加个微弱的背景色，区分序言 */
+     background-color: rgba(255, 255, 255, 0.05); 
+     border-radius: 10px;
+     padding: 20px; 
+}
+
+    </style>
+</head>
+<body>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="book-container">
+        
+        <h1>《代码的黎明：从零开始构建世界》</h1>
+
+        <div class="preface">
+            <h2>【序言】</h2>
+            <p>
+                编程不仅仅是敲击键盘，它是一场与逻辑的对话。在这个数字化的时代，每一行代码都是一块砖，我们用它搭建起通往未来的桥梁。
+            </p>
+            <p>
+                这本书记录了一个初学者是如何从对着黑屏幕发呆，到能够指挥计算机创造奇迹的全过程。如果你也站在起跑线上，那么请相信，Hello World 只是一个开始。
+            </p>
+        </div>
+
+        <hr>
+
+        <div class="toc">
+            <h2>【目录】</h2>
+            <h3>第一章: 环境搭建 —— 工欲善其事</h3>
+            <h3>第二章: 你好，世界 —— 第一次对话</h3>
+            <h3>第三章: HTML 的骨架 —— 结构的艺术</h3>
+            <h3>第四章: CSS 的魔法 —— 为网页着色</h3>
+            <h3>第五章: JavaScript —— 注入灵魂</h3>
+        </div>
+
+        <hr>
+
+        <div class="btn-group">
+            <button class="btn btn-sub">订阅</button>
+            <button class="btn btn-like">点赞</button>
+            <button class="btn btn-share">分享</button>
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置画布大小填满屏幕
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // 粒子数组
+        let particles = [];
+        // 鼠标位置
+        let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        // 监听鼠标移动，让黑洞跟随鼠标 (如果不想要跟随，可以注释掉这几行)
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        // 粒子类
+        class Particle {
+            constructor() {
+                // 随机生成粒子的初始位置 (圆形分布)
+                this.angle = Math.random() * Math.PI * 2;
+                this.radius = Math.random() * 500 + 100; // 离中心的距离
+                this.x = mouse.x + Math.cos(this.angle) * this.radius;
+                this.y = mouse.y + Math.sin(this.angle) * this.radius;
+                
+                // 粒子颜色 (黑洞周围的颜色：紫、蓝、白)
+                const colors = ['#ffffff', '#ff00aa', '#aa00ff', '#00aaff'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                this.size = Math.random() * 2; // 粒子大小
+                this.speed = Math.random() * 0.02 + 0.005; // 旋转速度
+            }
+
+            update() {
+                // 核心算法：让粒子绕着鼠标中心旋转并慢慢吸入
+                this.angle += this.speed;
+                this.radius -= 0.5; // 吸入速度
+
+                // 如果粒子被吸进黑洞了，重置它到外面去
+                if (this.radius < 0) {
+                    this.radius = Math.random() * 500 + 200;
+                    this.angle = Math.random() * Math.PI * 2;
+                }
+
+                // 计算新的坐标
+                this.x = mouse.x + Math.cos(this.angle) * this.radius;
+                this.y = mouse.y + Math.sin(this.angle) * this.radius;
+
+                this.draw();
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10; // 发光效果
+                ctx.shadowColor = this.color;
+                ctx.fill();
+            }
+        }
+
+        // 初始化粒子
+        function init() {
+            particles = [];
+            for (let i = 0; i < 300; i++) { // 生成 300 个粒子
+                particles.push(new Particle());
+            }
+        }
+
+        // 动画循环
+        function animate() {
+            // 每一帧都给背景覆盖一层半透明的黑，制造“拖尾”效果
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(particle => {
+                particle.update();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+
+        // 窗口大小改变时重置画布
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+        });
+    </script>
+</body>
+</html>
