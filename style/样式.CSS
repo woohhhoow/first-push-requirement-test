@@ -1,0 +1,177 @@
+
+        /* =========================================
+           1. 全局设置 & 动态背景容器
+           ========================================= */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #000000; /* 纯黑背景 */
+            color: #ffffff;            /* 全局文字白色 */
+            overflow-x: hidden;        /* 防止横向滚动条 */
+            min-height: 100vh;
+        }
+
+        /* 这是放黑洞特效的画布，它固定在最底层 */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* 放在最下面 */
+        }
+
+        /* =========================================
+           2. 书本容器 (玻璃拟态效果)
+           ========================================= */
+        .book-container {
+            max-width: 800px;
+            margin: 50px auto; /* 居中 */
+            
+            /* 玻璃拟态：半透明黑色背景 + 模糊滤镜 */
+            background-color: rgba(20, 20, 20, 0.6); 
+            backdrop-filter: blur(10px); /* 磨砂玻璃效果 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 微弱的白边框 */
+            
+            padding: 40px 60px;
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8); /* 深邃的阴影 */
+            position: relative; /* 确保内容在画布之上 */
+        }
+
+        /* =========================================
+           3. 字体排版
+           ========================================= */
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #fff;
+            /* 酷炫的文字描边+发光效果 */
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+        }
+
+        h2 {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            color: #aaa; /* 稍微暗一点的白色 */
+            font-size: 24px;
+        }
+
+        p {
+            line-height: 1.8;
+            color: #ccc; /* 正文用浅灰色，护眼 */
+            font-size: 16px;
+        }
+
+        /* 分割线样式 */
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0));
+            margin: 40px 0;
+        }
+
+        /* =========================================
+           4. 目录交互 (H3) - 优化版
+           ========================================= */
+        h3 {
+            color: #888;            /* 常态：灰色 */
+            padding: 15px 10px;
+            margin: 5px 0;
+            border-left: 0px solid transparent;
+            transition: all 0.3s ease; /* 丝滑过渡 */
+            cursor: pointer;
+            background: transparent;
+            border-radius: 0 10px 10px 0;
+        }
+
+        h3:hover {
+            color: #fff;            /* 悬浮：亮白 */
+            padding-left: 25px;     /* 向右滑动 */
+            background: linear-gradient(90deg, rgba(255, 115, 0, 0.1), transparent); /* 背景微光 */
+            border-left: 5px solid #ff7300; /* 亮橙色荧光条 */
+            text-shadow: 0 0 10px #ff7300;  /* 文字发光 */
+        }
+
+        /* =========================================
+           5. 按钮组 (Buttons) - 优化版
+           ========================================= */
+        .btn-group {
+            display: flex;
+            justify-content: center; /* 按钮居中排列 */
+            gap: 20px; /* 按钮之间的间距 */
+            margin-top: 50px;
+        }
+
+        /* 按钮通用样式 (大家都有的校服) */
+        .btn {
+            width: 100px;
+            height: 40px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s; /* 动画 */
+            color: #000; /* 默认文字黑色 */
+        }
+
+        /* --- 订阅按钮 (白色发光) --- */
+        .btn-sub {
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        .btn-sub:hover {
+            background-color: #ff7300; /* 悬浮变橙色 */
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 115, 0, 0.6);
+            transform: translateY(-3px); /* 上浮 */
+        }
+        .btn-sub:active { transform: scale(0.95); } /* 点击缩小 */
+
+        /* --- 点赞按钮 (粉色) --- */
+        .btn-like {
+            background-color: #ff2e63;
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 46, 99, 0.3);
+        }
+        .btn-like:hover {
+            background-color: #ff0040;
+            box-shadow: 0 0 20px rgba(255, 0, 64, 0.6);
+            transform: translateY(-3px);
+        }
+        .btn-like:active { transform: scale(0.95); }
+
+        /* --- 分享按钮 (蓝色) --- */
+        .btn-share {
+            background-color: #08d9d6;
+            color: #000;
+            box-shadow: 0 0 10px rgba(8, 217, 214, 0.3);
+        }
+        .btn-share:hover {
+            background-color: #00fffb;
+            box-shadow: 0 0 20px rgba(0, 255, 251, 0.6);
+            transform: translateY(-3px);
+        }
+        .btn-share:active { transform: scale(0.95); }
+        .preface, .toc {
+    /* 1. 增加呼吸感 */
+    padding: 0 20px;  /* 让文字不要贴着左右边缘，往里缩 20px */
+    
+    /* 2. 增加间距 */
+    margin-bottom: 30px; /* 每个大区块下面留出 30px 的空隙 */
+}
+
+/* 如果你想让【目录】区域更特别一点，可以单独加个框 */
+.toc {
+    /* 比如加个微弱的背景色，区分序言 */
+     background-color: rgba(255, 255, 255, 0.05); 
+     border-radius: 10px;
+     padding: 20px; 
+}
+
